@@ -2,9 +2,10 @@ use clap::{Parser, Subcommand};
 
 pub mod test;
 pub mod kokoro;
-pub mod ipa_tokenizer;
 pub mod playback;
 pub mod interactive;
+pub mod espeak_g2p;
+pub mod espeak_ipa_tokenizer;
 
 #[derive(Parser)]
 #[command(name = "ronnex")]
@@ -36,16 +37,18 @@ enum TestName {
     Identity,
     /// Run the Kokoro model test
     Kokoro,
-    /// Compare Kokoro tokenization methods
-    KokoroCompare,
-    /// Test rustruut IPA conversion
-    Rustruut,
     /// Analyze IPA symbols in Kokoro vocabulary
     AnalyzeIpa,
-    /// Test IPA tokenizer
-    IpaTokenizer,
     /// Interactive Kokoro chat mode
     KokoroChat,
+    /// Test espeak-ng FFI
+    Espeak,
+    /// Test espeak tokenizer
+    EspeakTokenizer,
+    /// Test direct phoneme input
+    DirectPhonemes,
+    /// Test raw token input
+    RawTokens,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -64,21 +67,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         test::kokoro_test::run_kokoro(no_play)?;
                     }
                 }
-                TestName::KokoroCompare => {
-                    let test_text = text.unwrap_or_else(|| "Testing the last word pronunciation".to_string());
-                    test::kokoro_test::test_kokoro_comparison(&test_text)?;
-                }
-                TestName::Rustruut => {
-                    test::test_rustruut::test_rustruut()?;
-                }
                 TestName::AnalyzeIpa => {
                     test::analyze_ipa::analyze_ipa_in_kokoro()?;
                 }
-                TestName::IpaTokenizer => {
-                    test::test_ipa_tokenizer::test_ipa_tokenizer()?;
-                }
                 TestName::KokoroChat => {
                     interactive::run_interactive()?;
+                }
+                TestName::Espeak => {
+                    test::test_espeak::test_espeak()?;
+                }
+                TestName::EspeakTokenizer => {
+                    test::test_espeak_tokenizer::test_espeak_tokenizer()?;
+                }
+                TestName::DirectPhonemes => {
+                    test::test_direct_phonemes::test_direct_phonemes()?;
+                }
+                TestName::RawTokens => {
+                    test::test_raw_tokens::test_raw_tokens()?;
                 }
             }
         }

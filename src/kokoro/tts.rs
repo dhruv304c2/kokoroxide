@@ -4,7 +4,7 @@ use std::error::Error;
 use std::time::Instant;
 use ndarray::{Array1, Array2, CowArray, IxDyn};
 use ort::{Environment, GraphOptimizationLevel, Session, SessionBuilder, Value};
-use crate::ipa_tokenizer::IpaTokenizer;
+use crate::espeak_ipa_tokenizer::EspeakIpaTokenizer;
 use super::voice::VoiceStyle;
 
 pub struct TTSConfig {
@@ -68,7 +68,7 @@ impl GeneratedAudio {
 
 pub struct KokoroTTS {
     session: Session,
-    tokenizer: IpaTokenizer,
+    tokenizer: EspeakIpaTokenizer,
     config: TTSConfig,
 }
 
@@ -98,13 +98,25 @@ impl KokoroTTS {
             vocab.insert(token.clone(), id.as_i64().unwrap_or(0));
         }
 
-        let tokenizer = IpaTokenizer::new(vocab)?;
+        let tokenizer = EspeakIpaTokenizer::new(vocab)?;
 
         Ok(KokoroTTS {
             session,
             tokenizer,
             config,
         })
+    }
+
+    pub fn generate_speech_from_phonemes(
+        &self,
+        phonemes: &str,
+        voice_style: &VoiceStyle,
+        speed: f32,
+        output_path: Option<&str>,
+    ) -> Result<GeneratedAudio, Box<dyn Error>> {
+        let tokens = self.tokenizer.encode_phonemes(phonemes, None)?;
+
+        self.generate_from_tokens(&tokens, voice_style, speed, output_path, phonemes)
     }
 
     pub fn generate_speech(
@@ -116,7 +128,21 @@ impl KokoroTTS {
     ) -> Result<GeneratedAudio, Box<dyn Error>> {
         let tokens = self.tokenizer.encode(text, None)?;
 
-        let input_ids = Array2::<i64>::from_shape_vec((1, tokens.len()), tokens)?;
+        self.generate_from_tokens(&tokens, voice_style, speed, output_path, text)
+    }
+
+    pub fn generate_from_tokens(
+        &self,
+        tokens: &[i64],
+        voice_style: &VoiceStyle,
+        speed: f32,
+        output_path: Option<&str>,
+        display_text: &str,
+    ) -> Result<GeneratedAudio, Box<dyn Error>> {
+        // Log the generated tokens in the requested format
+        println!("tokens = {:?}", tokens);
+
+        let input_ids = Array2::<i64>::from_shape_vec((1, tokens.len()), tokens.to_vec())?;
         let style_vector = voice_style.get_style_vector(256);
         let style = Array2::<f32>::from_shape_vec((1, 256), style_vector)?;
         let speed_array = Array1::<f32>::from_vec(vec![speed]);
@@ -148,7 +174,7 @@ impl KokoroTTS {
             if let Some(path) = output_path {
                 audio.save_to_wav(path)?;
             } else {
-                let safe_filename = text.chars()
+                let safe_filename = display_text.chars()
                     .filter(|c| c.is_alphanumeric() || *c == ' ')
                     .collect::<String>()
                     .replace(" ", "_")
@@ -173,61 +199,5 @@ impl KokoroTTS {
 
     pub fn get_max_length(&self) -> usize {
         self.config.max_length
-    }
-
-    pub fn generate_speech_raw(
-        &self,
-        text: &str,
-        voice_style: &VoiceStyle,
-        speed: f32,
-        output_path: Option<&str>,
-    ) -> Result<GeneratedAudio, Box<dyn Error>> {
-        let tokens = self.tokenizer.encode_raw(text)?;
-
-        let input_ids = Array2::<i64>::from_shape_vec((1, tokens.len()), tokens)?;
-        let style_vector = voice_style.get_style_vector(256);
-        let style = Array2::<f32>::from_shape_vec((1, 256), style_vector)?;
-        let speed_array = Array1::<f32>::from_vec(vec![speed]);
-
-        let input_ids_cow: CowArray<i64, IxDyn> = CowArray::from(input_ids.into_dyn());
-        let style_cow: CowArray<f32, IxDyn> = CowArray::from(style.into_dyn());
-        let speed_cow: CowArray<f32, IxDyn> = CowArray::from(speed_array.into_dyn());
-
-        let input_ids_tensor = Value::from_array(self.session.allocator(), &input_ids_cow)?;
-        let style_tensor = Value::from_array(self.session.allocator(), &style_cow)?;
-        let speed_tensor = Value::from_array(self.session.allocator(), &speed_cow)?;
-
-        let generation_start = Instant::now();
-        let outputs = self.session.run(vec![input_ids_tensor, style_tensor, speed_tensor])?;
-        let generation_duration = generation_start.elapsed();
-        println!("Model output generation took: {:?}", generation_duration);
-
-        if let Ok(output) = outputs[0].try_extract::<f32>() {
-            let view = output.view();
-            let samples = view.as_slice().unwrap().to_vec();
-            let duration_seconds = samples.len() as f32 / self.config.sample_rate as f32;
-
-            let audio = GeneratedAudio {
-                samples,
-                sample_rate: self.config.sample_rate,
-                duration_seconds,
-            };
-
-            if let Some(path) = output_path {
-                audio.save_to_wav(path)?;
-            } else {
-                let safe_filename = text.chars()
-                    .filter(|c| c.is_alphanumeric() || *c == ' ')
-                    .collect::<String>()
-                    .replace(" ", "_")
-                    .to_lowercase();
-                let filename = format!("kokoro_raw_{}.wav", &safe_filename[..safe_filename.len().min(20)]);
-                audio.save_to_wav(&filename)?;
-            }
-
-            Ok(audio)
-        } else {
-            Err("Failed to extract audio output".into())
-        }
     }
 }

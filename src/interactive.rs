@@ -68,7 +68,7 @@ impl InteractiveTTS {
 
         // Generate filename
         self.output_counter += 1;
-        let filename = format!("interactive_tts_{:04}.wav", self.output_counter);
+        let filename = "interactive_tts.wav";
 
         // Generate speech
         let audio = self.tts.generate_speech(&normalized, &self.voice_style, 1.0, Some(&filename))?;
