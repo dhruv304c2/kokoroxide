@@ -34,55 +34,33 @@ impl EspeakIpaTokenizer {
 
     /// Convert espeak IPA to Misaki phonemes to match kokoro Python output
     fn espeak_ipa_to_misaki(&self, ipa: &str) -> String {
-        // First, replace the Unicode tie bar (U+0361) with caret (^) to match Misaki docs format
+        // First, replace the Unicode tie bar (U+0361) with caret (^) to match Python
         let mut result = ipa.replace('\u{0361}', "^");
 
-        // Apply the exact transformations from Misaki docs (sorted by length descending)
-        // Note: Using American English (british = false)
-        // Important: Order matters - longer patterns must come first
+        // FROM_ESPEAKS = sorted({...}.items(), key=lambda kv: -len(kv[0]))
         let from_espeaks = vec![
-            // Longest patterns first
-            ("ʔˌn̩", "tᵊn"),
-            ("ʔˌn\u{0329}", "tᵊn"), // Alternative encoding
-            // Three-character patterns
-            ("ɜːɹ", "ɜɹ"), // American English
-            ("a^ɪ", "I"),
-            ("a^ʊ", "W"),
-            ("d^ʒ", "ʤ"),
-            ("e^ɪ", "A"),
-            ("e^ə", "ɛ"), // Additional pattern for British (but we skip for American)
-            ("o^ʊ", "O"),  // American English
-            ("ə^ʊ", "O"),  // Also map to O for American (as in "hello")
-            ("t^ʃ", "ʧ"),
-            ("ɔ^ɪ", "Y"),
-            ("ə^l", "ᵊl"),
-            ("ʲO", "jO"),  // Special cases from docs
-            ("ʲQ", "jQ"),  // Special cases from docs
-            // Two-character patterns
-            ("ɜː", "ɜɹ"),  // American English
-            ("ɪə", "iə"),  // American English
-            ("iə", "iə"),  // Keep as is for American
-            ("aɪ", "I"),   // Without tie marker
-            ("aʊ", "W"),   // Without tie marker
-            ("dʒ", "ʤ"),   // Without tie marker
-            ("eɪ", "A"),   // Without tie marker
-            ("oʊ", "O"),   // Without tie marker (American English)
-            ("tʃ", "ʧ"),   // Without tie marker
-            ("ɔɪ", "Y"),   // Without tie marker
-            ("ʔn", "tᵊn"),
-            ("ɚ", "əɹ"),
-            ("ɬ", "l"),
-            // Single character patterns
-            ("\u{0303}", ""), // U+0303 combining tilde
-            // ("ɐ", "ə"),  // REMOVED - kokoro uses ɐ directly
-            ("ʔ", "t"),
-            ("ʲ", ""),
-            ("e", "A"),
-            ("r", "ɹ"),
-            ("x", "k"),
-            ("ç", "k"),
-            // Additional British to American conversions
-            ("ɒ", "ɑ"), // British 'o' sound to American 'a' sound
+            // Sorted by length descending (longest first)
+            ("ʔˌn\u{0329}", "tᵊn"),  // 5 chars
+            ("a^ɪ", "I"),            // 3 chars
+            ("a^ʊ", "W"),            // 3 chars
+            ("d^ʒ", "ʤ"),            // 3 chars
+            ("e^ɪ", "A"),            // 3 chars
+            ("t^ʃ", "ʧ"),            // 3 chars
+            ("ɔ^ɪ", "Y"),            // 3 chars
+            ("ə^l", "ᵊl"),           // 3 chars
+            ("ʔn", "tᵊn"),           // 2 chars
+            ("ɚ", "əɹ"),             // 2 chars (even though it's 1 char, it maps to 2)
+            ("ʲO", "jO"),            // 2 chars
+            ("ʲQ", "jQ"),            // 2 chars
+            ("\u{0303}", ""),        // 1 char (U+0303 combining tilde)
+            ("e", "A"),              // 1 char
+            ("r", "ɹ"),              // 1 char
+            ("x", "k"),              // 1 char
+            ("ç", "k"),              // 1 char
+            ("ɐ", "ə"),              // 1 char
+            ("ɬ", "l"),              // 1 char
+            ("ʔ", "t"),              // 1 char
+            ("ʲ", ""),               // 1 char
         ];
 
         // Apply replacements
@@ -107,17 +85,18 @@ impl EspeakIpaTokenizer {
         }
         result = chars.into_iter().collect();
 
-        // Remove any remaining syllabic markers
+        // Remove any remaining syllabic markers (chr(809) in Python)
         result = result.replace('\u{0329}', "");
 
-        // For American English, remove length marks
-        result = result.replace("ː", "");
+        // Apply American English specific transformations (british = false)
+        result = result.replace("o^ʊ", "O");
+        result = result.replace("ɜːɹ", "ɜɹ");
+        result = result.replace("ɜː", "ɜɹ");
+        result = result.replace("ɪə", "iə");
+        result = result.replace("ː", "");  // Remove all length marks
 
-        // Remove tie markers
+        // Finally remove tie markers
         result = result.replace("^", "");
-
-        // IMPORTANT: Map regular 'g' (U+0067) to IPA 'ɡ' (U+0261) if present
-        result = result.replace('g', "ɡ");
 
         result
     }
@@ -128,19 +107,7 @@ impl EspeakIpaTokenizer {
         let ipa = self.g2p.text_to_ipa(text)?;
 
         // Convert to Misaki phonemes
-        let mut misaki_phonemes = self.espeak_ipa_to_misaki(&ipa);
-
-        // Preserve punctuation from original text
-        // This is a simple approach - just append punctuation if the text ends with it
-        if text.ends_with('.') && !misaki_phonemes.ends_with('.') {
-            misaki_phonemes.push('.');
-        } else if text.ends_with(';') && !misaki_phonemes.ends_with(';') {
-            misaki_phonemes.push(';');
-        } else if text.ends_with('!') && !misaki_phonemes.ends_with('!') {
-            misaki_phonemes.push('!');
-        } else if text.ends_with('?') && !misaki_phonemes.ends_with('?') {
-            misaki_phonemes.push('?');
-        }
+        let misaki_phonemes = self.espeak_ipa_to_misaki(&ipa);
 
         if std::env::var("DEBUG_PHONEMES").is_ok() {
             println!("Input text: '{}'", text);
