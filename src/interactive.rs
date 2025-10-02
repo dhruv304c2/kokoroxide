@@ -13,7 +13,7 @@ impl InteractiveTTS {
     /// Create a new interactive TTS session
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
-        let voice_style = load_voice_style("models/kokoro/af.bin", "Nicole")?;
+        let voice_style = load_voice_style("models/kokoro/af.bin")?;
 
         Ok(InteractiveTTS {
             tts,
@@ -100,17 +100,15 @@ impl InteractiveTTS {
 pub fn run_interactive_tts_with_options(
     speed: f32,
     voice_path: Option<&str>,
-    voice_name: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing Interactive TTS with custom options...");
 
     let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
     let voice_path = voice_path.unwrap_or("models/kokoro/af.bin");
-    let voice_name = voice_name.unwrap_or("Nicole");
-    let voice_style = load_voice_style(voice_path, voice_name)?;
+    let voice_style = load_voice_style(voice_path)?;
 
     println!("TTS engine initialized!");
-    println!("Voice: {} ({})", voice_name, voice_path);
+    println!("Voice: {}", voice_path);
     println!("Speed: {:.1}x", speed);
     println!("\n=== Interactive Kokoro TTS ===");
     println!("Type your text and press Enter to generate speech.");

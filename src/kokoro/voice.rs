@@ -5,13 +5,12 @@ use std::error::Error;
 
 #[derive(Clone)]
 pub struct VoiceStyle {
-    pub name: String,
     pub data: Vec<f32>,
 }
 
 impl VoiceStyle {
-    pub fn new(name: String, data: Vec<f32>) -> Self {
-        VoiceStyle { name, data }
+    pub fn new(data: Vec<f32>) -> Self {
+        VoiceStyle { data }
     }
 
     pub fn get_style_vector(&self, size: usize) -> Vec<f32> {
@@ -24,7 +23,7 @@ impl VoiceStyle {
     }
 }
 
-pub fn load_voice_style<P: AsRef<Path>>(path: P, name: &str) -> Result<VoiceStyle, Box<dyn Error>> {
+pub fn load_voice_style<P: AsRef<Path>>(path: P) -> Result<VoiceStyle, Box<dyn Error>> {
     let mut file = File::open(path)?;
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)?;
@@ -34,5 +33,5 @@ pub fn load_voice_style<P: AsRef<Path>>(path: P, name: &str) -> Result<VoiceStyl
         .map(|chunk| f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
 
-    Ok(VoiceStyle::new(name.to_string(), style_data))
+    Ok(VoiceStyle::new(style_data))
 }

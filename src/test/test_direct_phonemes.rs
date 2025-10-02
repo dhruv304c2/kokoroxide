@@ -6,7 +6,7 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize TTS
     let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
-    let voice_style = load_voice_style("models/kokoro/af.bin", "Nicole")?;
+    let voice_style = load_voice_style("models/kokoro/af.bin")?;
 
     // Test cases with direct phonemes
     let test_cases = vec![

@@ -1,7 +1,14 @@
 [package]
-name = "ronnex"
+name = "kokoroxide"
 version = "0.1.0"
 edition = "2021"
+authors = ["Dhruv Pant <dhruv304c2@gmail.com>"]
+description = "A Rust implementation of Kokoro TTS (Text-to-Speech) synthesis"
+repository = "https://github.com/dhruv304c2/kokoroxide"
+license = "MIT OR Apache-2.0"
+keywords = ["tts", "text-to-speech", "kokoro", "audio", "voice-synthesis"]
+categories = ["multimedia::audio", "accessibility"]
+readme = "README.md"
 
 [build-dependencies]
 clang-sys = { version = "1.8", features = ["runtime"] }

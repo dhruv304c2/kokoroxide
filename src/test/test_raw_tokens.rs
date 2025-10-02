@@ -15,7 +15,7 @@ pub fn test_raw_tokens() -> Result<(), Box<dyn Error>> {
     println!("tokens = {:?}", tokens);
 
     // Create voice style
-    let voice_style = load_voice_style("models/kokoro/af.bin", "Nicole")?;
+    let voice_style = load_voice_style("models/kokoro/af.bin")?;
     let speed = 1.0;
 
     // Generate audio from raw tokens

@@ -666,6 +666,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kokoroxide"
+version = "0.1.0"
+dependencies = [
+ "clang-sys",
+ "clap",
+ "hound",
+ "ndarray",
+ "ort",
+ "regex",
+ "rodio",
+ "serde_json",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1072,20 +1086,6 @@ dependencies = [
  "hound",
  "lewton",
  "symphonia",
-]
-
-[[package]]
-name = "ronnex"
-version = "0.1.0"
-dependencies = [
- "clang-sys",
- "clap",
- "hound",
- "ndarray",
- "ort",
- "regex",
- "rodio",
- "serde_json",
 ]
 
 [[package]]

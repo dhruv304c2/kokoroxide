@@ -8,7 +8,7 @@ pub fn run_kokoro(no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
 pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
     let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
 
-    let voice = load_voice_style("models/kokoro/af.bin", "Nicole")?;
+    let voice = load_voice_style("models/kokoro/af.bin")?;
 
     let normalized_text = normalize_for_kokoro(text.to_string());
 
