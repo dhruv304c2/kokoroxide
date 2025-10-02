@@ -1,5 +1,5 @@
 /target
-/.wav
+*.wav
 .DS_Store
 
 models/
