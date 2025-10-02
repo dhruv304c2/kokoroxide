@@ -6,7 +6,7 @@ pub fn run_kokoro(no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let tts = KokoroTTS::new()?;
+    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
 
     let voice = load_voice_style("models/kokoro/af.bin", "Nicole")?;
 
@@ -14,9 +14,12 @@ pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std
 
     println!("Generating speech for: \"{}\"", text);
     let output_path = "kokoro_test_output.wav";
-    let audio = tts.generate_speech(&normalized_text, &voice, 1.0, Some(output_path))?;
+    let audio = tts.generate_speech(&normalized_text, &voice, 1.0)?;
 
     println!("Duration: {:.2} seconds", audio.duration_seconds);
+
+    // Save the audio file
+    audio.save_to_wav(output_path)?;
 
     if !no_play {
         println!("\nPlaying generated speech...");

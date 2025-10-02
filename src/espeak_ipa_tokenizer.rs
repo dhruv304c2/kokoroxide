@@ -9,14 +9,13 @@ pub struct EspeakIpaTokenizer {
     eos_id: i64,
     model_max_length: usize,
     g2p: EspeakG2P,
-    max_token_chars: usize, // NEW
+    max_token_chars: usize,
 }
 
 
 impl EspeakIpaTokenizer {
     pub fn new(vocab: HashMap<String, i64>) -> Result<Self, Box<dyn std::error::Error>> {
         let bos_id = *vocab.get("$").ok_or("BOS token '$' not found")?;
-        // otherwise fetch the explicit EOS and assert
         let eos_id = bos_id;
 
         let g2p = EspeakG2P::new()?;
@@ -192,19 +191,16 @@ impl EspeakIpaTokenizer {
         let mut tokens = Vec::with_capacity(text.len() + 2);
         tokens.push(self.bos_id);
 
-        // Text → IPA (via espeak) → normalize/misaki map (your existing logic)
         let ipa_start = Instant::now();
-        let ipa_text = self.text_to_ipa(text)?; // already logs Espeak IPA + Misaki when DEBUG_PHONEMES=1
+        let ipa_text = self.text_to_ipa(text)?;
         println!("Phoneme tokenization (espeak IPA conversion) took: {:?}", ipa_start.elapsed());
 
-        // Longest-match tokenize against vocab (handles multi-char phones)
         let mut inner = self.tokenize_longest(&ipa_text);
         tokens.append(&mut inner);
 
         // EOS
         tokens.push(self.eos_id);
 
-        // Truncate if needed (keep BOS/EOS)
         if tokens.len() > max_len {
             let keep_inner = max_len.saturating_sub(2);
             let mut truncated = Vec::with_capacity(max_len);

@@ -12,7 +12,7 @@ pub struct InteractiveTTS {
 impl InteractiveTTS {
     /// Create a new interactive TTS session
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let tts = KokoroTTS::new()?;
+        let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
         let voice_style = load_voice_style("models/kokoro/af.bin", "Nicole")?;
 
         Ok(InteractiveTTS {
@@ -71,7 +71,10 @@ impl InteractiveTTS {
         let filename = "interactive_tts.wav";
 
         // Generate speech
-        let audio = self.tts.generate_speech(&normalized, &self.voice_style, 1.0, Some(&filename))?;
+        let audio = self.tts.generate_speech(&normalized, &self.voice_style, 1.0)?;
+
+        // Save the audio file
+        audio.save_to_wav(&filename)?;
 
         // Calculate generation time
         let generation_time = start_time.elapsed();
@@ -101,7 +104,7 @@ pub fn run_interactive_tts_with_options(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing Interactive TTS with custom options...");
 
-    let tts = KokoroTTS::new()?;
+    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
     let voice_path = voice_path.unwrap_or("models/kokoro/af.bin");
     let voice_name = voice_name.unwrap_or("Nicole");
     let voice_style = load_voice_style(voice_path, voice_name)?;
@@ -141,8 +144,11 @@ pub fn run_interactive_tts_with_options(
 
         println!("\nGenerating speech for: \"{}\"", input);
 
-        match tts.generate_speech(&normalized, &voice_style, speed, Some(&filename)) {
+        match tts.generate_speech(&normalized, &voice_style, speed) {
             Ok(audio) => {
+                // Save the audio file
+                audio.save_to_wav(&filename)?;
+
                 let generation_time = start_time.elapsed();
 
                 println!("Generation completed in: {:.2}s", generation_time.as_secs_f32());

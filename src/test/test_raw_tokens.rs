@@ -5,7 +5,7 @@ pub fn test_raw_tokens() -> Result<(), Box<dyn Error>> {
     println!("=== Testing Raw Token Input to ONNX Model ===");
 
     // Initialize TTS
-    let tts = KokoroTTS::new()?;
+    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
 
     // Example tokens in the format you provided
     let tokens: Vec<i64> = vec![
@@ -22,12 +22,13 @@ pub fn test_raw_tokens() -> Result<(), Box<dyn Error>> {
     let audio = tts.generate_from_tokens(
         &tokens,
         &voice_style,
-        speed,
-        Some("raw_tokens_test.wav"),
-        "raw_token_test"
+        speed
     )?;
 
     println!("Audio generated successfully!");
+
+    // Save the audio file
+    audio.save_to_wav("raw_tokens_test.wav")?;
     println!("Output saved to: raw_tokens_test.wav");
 
     Ok(())

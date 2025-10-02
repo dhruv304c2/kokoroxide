@@ -5,7 +5,7 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Testing Direct Phoneme Input ===\n");
 
     // Initialize TTS
-    let tts = KokoroTTS::new()?;
+    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
     let voice_style = load_voice_style("models/kokoro/af.bin", "Nicole")?;
 
     // Test cases with direct phonemes
@@ -38,10 +38,13 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("Generating speech to: {}", filename);
 
-        match tts.generate_speech_from_phonemes(phonemes, &voice_style, 1.0, Some(&filename)) {
+        match tts.generate_speech_from_phonemes(phonemes, &voice_style, 1.0) {
             Ok(audio) => {
                 println!("✓ Generated successfully");
                 println!("  Duration: {:.2}s", audio.duration_seconds);
+
+                // Save the audio file
+                audio.save_to_wav(&filename)?;
 
                 // Play the audio
                 std::thread::sleep(std::time::Duration::from_millis(500));
