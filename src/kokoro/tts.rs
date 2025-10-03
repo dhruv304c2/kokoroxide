@@ -1,7 +1,7 @@
 use super::voice::VoiceStyle;
 use crate::espeak::EspeakIpaTokenizer;
 use ndarray::{Array1, Array2, CowArray, IxDyn};
-use ort::{Environment, GraphOptimizationLevel, Session, SessionBuilder, Value};
+use ort::{Environment, ExecutionProvider, GraphOptimizationLevel, Session, SessionBuilder, Value};
 use std::error::Error;
 use std::io::Cursor;
 use std::path::Path;
@@ -13,6 +13,7 @@ pub struct TTSConfig {
     pub max_length: usize,
     pub sample_rate: u32,
     pub graph_level: GraphOptimizationLevel,
+    pub execution_provider: Vec<ExecutionProvider>,
 }
 
 impl TTSConfig {
@@ -23,6 +24,7 @@ impl TTSConfig {
             max_length: 512,
             sample_rate: 24000,
             graph_level: GraphOptimizationLevel::Level3,
+            execution_provider: vec![],
         }
     }
 
@@ -38,6 +40,11 @@ impl TTSConfig {
 
     pub fn with_graph_optimization_level(mut self, level: GraphOptimizationLevel) -> Self {
         self.graph_level = level;
+        self
+    }
+
+    pub fn with_execution_providers(mut self, providers: Vec<ExecutionProvider>) -> Self {
+        self.execution_provider = providers;
         self
     }
 }
@@ -112,6 +119,8 @@ impl KokoroTTS {
 
         let session = SessionBuilder::new(&env)?
             .with_optimization_level(optimization)?
+            .with_parallel_execution(true)?
+            .with_execution_providers(config.execution_provider.clone())?
             .with_model_from_file(&config.model_path)?;
 
         let tokenizer_content = std::fs::read_to_string(&config.tokenizer_path)?;
