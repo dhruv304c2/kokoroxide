@@ -108,10 +108,22 @@ let audio = tts.generate_from_tokens(&tokens, &voice, 1.0)?;
 ### TTSConfig Options
 
 ```rust
+use ort::GraphOptimizationLevel;
+
 let config = TTSConfig::new(model_path, tokenizer_path)
     .with_max_tokens_length(64)     // Maximum token sequence length
-    .with_sample_rate(22050);       // Audio sample rate in Hz
+    .with_sample_rate(22050)        // Audio sample rate in Hz
+    .with_graph_optimization_level(GraphOptimizationLevel::Level3); // ONNX graph optimization
 ```
+
+#### Graph Optimization Levels
+
+The `with_graph_optimization_level()` method allows you to control ONNX Runtime's graph optimization:
+
+- `GraphOptimizationLevel::Disable` - No optimizations
+- `GraphOptimizationLevel::Level1` - Basic optimizations
+- `GraphOptimizationLevel::Level2` - Extended optimizations
+- `GraphOptimizationLevel::Level3` - Maximum optimizations (default)
 
 ## Requirements
 

@@ -11,6 +11,7 @@ pub struct TTSConfig {
     pub tokenizer_path: String,
     pub max_length: usize,
     pub sample_rate: u32,
+    pub graph_level: GraphOptimizationLevel
 }
 
 impl TTSConfig {
@@ -20,6 +21,7 @@ impl TTSConfig {
             tokenizer_path: tokenizer_path.to_string(),
             max_length: 64,
             sample_rate: 22050,
+            graph_level: GraphOptimizationLevel::Level3
         }
     }
 
@@ -30,6 +32,11 @@ impl TTSConfig {
 
     pub fn with_sample_rate(mut self, sample_rate: u32) -> Self {
         self.sample_rate = sample_rate;
+        self
+    }
+
+    pub fn with_graph_optimization_level(mut self, level: GraphOptimizationLevel) -> Self {
+        self.graph_level = level;
         self
     }
 }
@@ -94,8 +101,15 @@ impl KokoroTTS {
                 .build()?
         );
 
+        let optimization = match config.graph_level{
+            GraphOptimizationLevel::Disable => GraphOptimizationLevel::Disable,
+            GraphOptimizationLevel::Level1 => GraphOptimizationLevel::Level1,
+            GraphOptimizationLevel::Level2 => GraphOptimizationLevel::Level2,
+            GraphOptimizationLevel::Level3 => GraphOptimizationLevel::Level3,
+        };
+
         let session = SessionBuilder::new(&env)?
-            .with_optimization_level(GraphOptimizationLevel::Level3)?
+            .with_optimization_level(optimization)?
             .with_model_from_file(&config.model_path)?;
 
         let tokenizer_content = std::fs::read_to_string(&config.tokenizer_path)?;
