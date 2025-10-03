@@ -1,7 +1,7 @@
+use super::EspeakG2P;
 use std::collections::HashMap;
 use std::error::Error;
 use std::time::Instant;
-use crate::espeak_g2p::EspeakG2P;
 
 pub struct EspeakIpaTokenizer {
     vocab: HashMap<String, i64>,
@@ -11,7 +11,6 @@ pub struct EspeakIpaTokenizer {
     g2p: EspeakG2P,
     max_token_chars: usize,
 }
-
 
 impl EspeakIpaTokenizer {
     pub fn new(vocab: HashMap<String, i64>) -> Result<Self, Box<dyn std::error::Error>> {
@@ -39,27 +38,27 @@ impl EspeakIpaTokenizer {
         // FROM_ESPEAKS = sorted({...}.items(), key=lambda kv: -len(kv[0]))
         let from_espeaks = vec![
             // Sorted by length descending (longest first)
-            ("ʔˌn\u{0329}", "tᵊn"),  // 5 chars
-            ("a^ɪ", "I"),            // 3 chars
-            ("a^ʊ", "W"),            // 3 chars
-            ("d^ʒ", "ʤ"),            // 3 chars
-            ("e^ɪ", "A"),            // 3 chars
-            ("t^ʃ", "ʧ"),            // 3 chars
-            ("ɔ^ɪ", "Y"),            // 3 chars
-            ("ə^l", "ᵊl"),           // 3 chars
-            ("ʔn", "tᵊn"),           // 2 chars
-            ("ɚ", "əɹ"),             // 2 chars (even though it's 1 char, it maps to 2)
-            ("ʲO", "jO"),            // 2 chars
-            ("ʲQ", "jQ"),            // 2 chars
-            ("\u{0303}", ""),        // 1 char (U+0303 combining tilde)
-            ("e", "A"),              // 1 char
-            ("r", "ɹ"),              // 1 char
-            ("x", "k"),              // 1 char
-            ("ç", "k"),              // 1 char
-            ("ɐ", "ə"),              // 1 char
-            ("ɬ", "l"),              // 1 char
-            ("ʔ", "t"),              // 1 char
-            ("ʲ", ""),               // 1 char
+            ("ʔˌn\u{0329}", "tᵊn"), // 5 chars
+            ("a^ɪ", "I"),           // 3 chars
+            ("a^ʊ", "W"),           // 3 chars
+            ("d^ʒ", "ʤ"),           // 3 chars
+            ("e^ɪ", "A"),           // 3 chars
+            ("t^ʃ", "ʧ"),           // 3 chars
+            ("ɔ^ɪ", "Y"),           // 3 chars
+            ("ə^l", "ᵊl"),          // 3 chars
+            ("ʔn", "tᵊn"),          // 2 chars
+            ("ɚ", "əɹ"),            // 2 chars (even though it's 1 char, it maps to 2)
+            ("ʲO", "jO"),           // 2 chars
+            ("ʲQ", "jQ"),           // 2 chars
+            ("\u{0303}", ""),       // 1 char (U+0303 combining tilde)
+            ("e", "A"),             // 1 char
+            ("r", "ɹ"),             // 1 char
+            ("x", "k"),             // 1 char
+            ("ç", "k"),             // 1 char
+            ("ɐ", "ə"),             // 1 char
+            ("ɬ", "l"),             // 1 char
+            ("ʔ", "t"),             // 1 char
+            ("ʲ", ""),              // 1 char
         ];
 
         // Apply replacements
@@ -92,7 +91,7 @@ impl EspeakIpaTokenizer {
         result = result.replace("ɜːɹ", "ɜɹ");
         result = result.replace("ɜː", "ɜɹ");
         result = result.replace("ɪə", "iə");
-        result = result.replace("ː", "");  // Remove all length marks
+        result = result.replace("ː", ""); // Remove all length marks
 
         // Finally remove tie markers
         result = result.replace("^", "");
@@ -113,7 +112,7 @@ impl EspeakIpaTokenizer {
         Ok(misaki_phonemes)
     }
 
-     fn max_token_chars(vocab: &HashMap<String, i64>) -> usize {
+    fn max_token_chars(vocab: &HashMap<String, i64>) -> usize {
         vocab.keys().map(|k| k.chars().count()).max().unwrap_or(1)
     }
 
@@ -149,7 +148,11 @@ impl EspeakIpaTokenizer {
         ids
     }
 
-    pub fn encode_phonemes(&self, phonemes: &str, max_length: Option<usize>) -> Result<Vec<i64>, Box<dyn std::error::Error>> {
+    pub fn encode_phonemes(
+        &self,
+        phonemes: &str,
+        max_length: Option<usize>,
+    ) -> Result<Vec<i64>, Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let max_len = max_length.unwrap_or(self.model_max_length);
 
@@ -172,13 +175,19 @@ impl EspeakIpaTokenizer {
             truncated.extend_from_slice(&tokens[1..1 + keep_inner]);
             truncated.push(self.eos_id);
             if std::env::var("DEBUG_TIMING").is_ok() {
-                println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
+                println!(
+                    "Direct phoneme tokenization time: {:?}",
+                    start_time.elapsed()
+                );
             }
             return Ok(truncated);
         }
 
         if std::env::var("DEBUG_TIMING").is_ok() {
-            println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
+            println!(
+                "Direct phoneme tokenization time: {:?}",
+                start_time.elapsed()
+            );
         }
         if std::env::var("DEBUG_TOKENS").is_ok() {
             println!("tokens = {:?}", tokens);
@@ -186,7 +195,11 @@ impl EspeakIpaTokenizer {
         Ok(tokens)
     }
 
-    pub fn encode(&self, text: &str, max_length: Option<usize>) -> Result<Vec<i64>, Box<dyn std::error::Error>> {
+    pub fn encode(
+        &self,
+        text: &str,
+        max_length: Option<usize>,
+    ) -> Result<Vec<i64>, Box<dyn std::error::Error>> {
         let start_time = Instant::now();
         let max_len = max_length.unwrap_or(self.model_max_length);
 
@@ -197,7 +210,10 @@ impl EspeakIpaTokenizer {
         let ipa_start = Instant::now();
         let ipa_text = self.text_to_ipa(text)?;
         if std::env::var("DEBUG_TIMING").is_ok() {
-            println!("Phoneme tokenization (espeak IPA conversion) took: {:?}", ipa_start.elapsed());
+            println!(
+                "Phoneme tokenization (espeak IPA conversion) took: {:?}",
+                ipa_start.elapsed()
+            );
         }
 
         let mut inner = self.tokenize_longest(&ipa_text);

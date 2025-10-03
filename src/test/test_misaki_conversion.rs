@@ -1,5 +1,5 @@
-use crate::espeak_g2p::EspeakG2P;
-use crate::espeak_ipa_tokenizer::EspeakIpaTokenizer;
+use crate::espeak::EspeakG2P;
+use crate::espeak::EspeakIpaTokenizer;
 use std::collections::HashMap;
 
 #[allow(dead_code)]
@@ -13,7 +13,6 @@ pub fn test_misaki_conversion() -> Result<(), Box<dyn std::error::Error>> {
     let test_cases = vec![
         // From the doc example
         ("merchantship", "mˈɜːt^ʃəntʃˌɪp", "mˈɜɹʧəntʃˌɪp"), // American expected
-
         // Basic words to test common conversions
         ("yes", "", "jˈɛs"),      // j represents "y" sound
         ("get", "", "ɡɛt"),       // hard g sound
@@ -57,10 +56,13 @@ pub fn test_misaki_conversion() -> Result<(), Box<dyn std::error::Error>> {
     let tokenizer = EspeakIpaTokenizer::new(vocab)?;
 
     println!("Testing individual word conversions:");
-    println!("{:<15} {:<25} {:<25} {:<25}", "Word", "Espeak IPA", "Expected", "Actual");
+    println!(
+        "{:<15} {:<25} {:<25} {:<25}",
+        "Word", "Espeak IPA", "Expected", "Actual"
+    );
     println!("{}", "-".repeat(90));
 
-    for (word, espeak_raw,_) in test_cases {
+    for (word, espeak_raw, _) in test_cases {
         if espeak_raw.is_empty() {
             g2p.text_to_ipa(word)?
         } else {

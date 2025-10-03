@@ -1,4 +1,4 @@
-use crate::espeak_ipa_tokenizer::EspeakIpaTokenizer;
+use crate::espeak::EspeakIpaTokenizer;
 
 pub fn test_espeak_tokenizer() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Testing Espeak IPA Tokenizer ===\n");
@@ -6,7 +6,8 @@ pub fn test_espeak_tokenizer() -> Result<(), Box<dyn std::error::Error>> {
     // Get vocabulary from tokenizer.json
     let tokenizer_content = std::fs::read_to_string("models/kokoro/tokenizer.json")?;
     let tokenizer_json: serde_json::Value = serde_json::from_str(&tokenizer_content)?;
-    let vocab_obj = tokenizer_json["model"]["vocab"].as_object()
+    let vocab_obj = tokenizer_json["model"]["vocab"]
+        .as_object()
         .ok_or("No vocab found")?;
 
     let mut vocab = std::collections::HashMap::new();
@@ -23,7 +24,7 @@ pub fn test_espeak_tokenizer() -> Result<(), Box<dyn std::error::Error>> {
         "Hello world",
         "The quick brown fox",
         "Testing pronunciation",
-        "a i u e o",  // Single letters
+        "a i u e o", // Single letters
     ];
 
     for sentence in test_sentences {

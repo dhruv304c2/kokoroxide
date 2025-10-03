@@ -1,17 +1,17 @@
-use std::sync::Arc;
-use std::path::Path;
-use std::error::Error;
+use super::voice::VoiceStyle;
+use crate::espeak::EspeakIpaTokenizer;
 use ndarray::{Array1, Array2, CowArray, IxDyn};
 use ort::{Environment, GraphOptimizationLevel, Session, SessionBuilder, Value};
-use crate::espeak_ipa_tokenizer::EspeakIpaTokenizer;
-use super::voice::VoiceStyle;
+use std::error::Error;
+use std::path::Path;
+use std::sync::Arc;
 
 pub struct TTSConfig {
     pub model_path: String,
     pub tokenizer_path: String,
     pub max_length: usize,
     pub sample_rate: u32,
-    pub graph_level: GraphOptimizationLevel
+    pub graph_level: GraphOptimizationLevel,
 }
 
 impl TTSConfig {
@@ -21,7 +21,7 @@ impl TTSConfig {
             tokenizer_path: tokenizer_path.to_string(),
             max_length: 512,
             sample_rate: 24000,
-            graph_level: GraphOptimizationLevel::Level3
+            graph_level: GraphOptimizationLevel::Level3,
         }
     }
 
@@ -89,15 +89,10 @@ pub struct KokoroTTS {
 }
 
 impl KokoroTTS {
-
     pub fn with_config(config: TTSConfig) -> Result<Self, Box<dyn Error>> {
-        let env = Arc::new(
-            Environment::builder()
-                .with_name("kokoro_tts")
-                .build()?
-        );
+        let env = Arc::new(Environment::builder().with_name("kokoro_tts").build()?);
 
-        let optimization = match config.graph_level{
+        let optimization = match config.graph_level {
             GraphOptimizationLevel::Disable => GraphOptimizationLevel::Disable,
             GraphOptimizationLevel::Level1 => GraphOptimizationLevel::Level1,
             GraphOptimizationLevel::Level2 => GraphOptimizationLevel::Level2,
@@ -110,7 +105,8 @@ impl KokoroTTS {
 
         let tokenizer_content = std::fs::read_to_string(&config.tokenizer_path)?;
         let tokenizer_json: serde_json::Value = serde_json::from_str(&tokenizer_content)?;
-        let vocab_obj = tokenizer_json["model"]["vocab"].as_object()
+        let vocab_obj = tokenizer_json["model"]["vocab"]
+            .as_object()
             .ok_or("No vocab found in tokenizer.json")?;
 
         let mut vocab = std::collections::HashMap::new();
@@ -155,7 +151,6 @@ impl KokoroTTS {
         voice_style: &VoiceStyle,
         speed: f32,
     ) -> Result<GeneratedAudio, Box<dyn Error>> {
-
         let input_ids = Array2::<i64>::from_shape_vec((1, tokens.len()), tokens.to_vec())?;
         // Use token length to select the appropriate style vector, matching Python implementation
         let style_vector = voice_style.get_style_vector_for_token_length(tokens.len(), 256);
@@ -170,7 +165,9 @@ impl KokoroTTS {
         let style_tensor = Value::from_array(self.session.allocator(), &style_cow)?;
         let speed_tensor = Value::from_array(self.session.allocator(), &speed_cow)?;
 
-        let outputs = self.session.run(vec![input_ids_tensor, style_tensor, speed_tensor])?;
+        let outputs = self
+            .session
+            .run(vec![input_ids_tensor, style_tensor, speed_tensor])?;
 
         if let Ok(output) = outputs[0].try_extract::<f32>() {
             let view = output.view();
@@ -190,7 +187,11 @@ impl KokoroTTS {
     }
 
     #[allow(dead_code)]
-    pub fn speak(&self, text: &str, voice_style: &VoiceStyle) -> Result<GeneratedAudio, Box<dyn Error>> {
+    pub fn speak(
+        &self,
+        text: &str,
+        voice_style: &VoiceStyle,
+    ) -> Result<GeneratedAudio, Box<dyn Error>> {
         self.generate_speech(text, voice_style, 1.0)
     }
 }

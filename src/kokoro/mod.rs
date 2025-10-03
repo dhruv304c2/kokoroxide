@@ -1,7 +1,7 @@
 mod tts;
 mod voice;
 
-pub use tts::{KokoroTTS, TTSConfig};
 #[allow(unused_imports)]
 pub use tts::GeneratedAudio;
-pub use voice::{VoiceStyle, load_voice_style};
+pub use tts::{KokoroTTS, TTSConfig};
+pub use voice::{load_voice_style, VoiceStyle};

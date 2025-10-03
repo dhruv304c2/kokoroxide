@@ -33,4 +33,3 @@ pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std
 
     Ok(())
 }
-

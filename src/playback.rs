@@ -1,7 +1,7 @@
+use rodio::{Decoder, OutputStream, Sink};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use rodio::{Decoder, OutputStream, Sink};
 
 pub struct AudioPlayer {
     _stream: OutputStream,
@@ -31,7 +31,10 @@ impl AudioPlayer {
     }
 
     /// Play and wait for completion
-    pub fn play_file_blocking<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn play_file_blocking<P: AsRef<Path>>(
+        &self,
+        path: P,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.play_file(path)?;
         self.sink.sleep_until_end();
         Ok(())
@@ -83,7 +86,10 @@ pub fn play_wav_file<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::
 
 /// Play a WAV file with a custom message
 #[allow(dead_code)]
-pub fn play_wav_with_message<P: AsRef<Path>>(path: P, message: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn play_wav_with_message<P: AsRef<Path>>(
+    path: P,
+    message: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", message);
     play_wav_file(path)
 }

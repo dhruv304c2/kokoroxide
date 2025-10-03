@@ -1,4 +1,4 @@
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_void};
 use std::sync::Once;
 
@@ -41,12 +41,7 @@ impl EspeakG2P {
         // Initialize espeak-ng only once
         unsafe {
             INIT.call_once(|| {
-                let result = espeak_Initialize(
-                    AUDIO_OUTPUT_RETRIEVAL,
-                    0,
-                    std::ptr::null(),
-                    0,
-                );
+                let result = espeak_Initialize(AUDIO_OUTPUT_RETRIEVAL, 0, std::ptr::null(), 0);
                 INITIALIZED = result >= 0;
 
                 if INITIALIZED {
@@ -77,12 +72,10 @@ impl EspeakG2P {
             // so we need to call it repeatedly until all text is processed
             loop {
                 // Get IPA phonemes with stress markers and tie markers (as per Misaki docs)
-                let phoneme_mode = ESPEAK_PHONEMES_IPA | ESPEAK_PHONEMES_SHOW_STRESS | ESPEAK_PHONEMES_TIE;
-                let phonemes_ptr = espeak_TextToPhonemes(
-                    &mut text_ptr,
-                    ESPEAK_CHARS_UTF8,
-                    phoneme_mode,
-                );
+                let phoneme_mode =
+                    ESPEAK_PHONEMES_IPA | ESPEAK_PHONEMES_SHOW_STRESS | ESPEAK_PHONEMES_TIE;
+                let phonemes_ptr =
+                    espeak_TextToPhonemes(&mut text_ptr, ESPEAK_CHARS_UTF8, phoneme_mode);
 
                 if phonemes_ptr.is_null() {
                     break;

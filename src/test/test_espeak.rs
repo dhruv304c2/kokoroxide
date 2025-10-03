@@ -1,4 +1,4 @@
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_void};
 
 // Simple FFI bindings for espeak-ng
@@ -34,12 +34,7 @@ pub fn test_espeak() -> Result<(), Box<dyn std::error::Error>> {
 
     unsafe {
         // Initialize espeak-ng (no audio output needed for phoneme conversion)
-        let init_result = espeak_Initialize(
-            AUDIO_OUTPUT_RETRIEVAL,
-            0,
-            std::ptr::null(),
-            0,
-        );
+        let init_result = espeak_Initialize(AUDIO_OUTPUT_RETRIEVAL, 0, std::ptr::null(), 0);
 
         if init_result < 0 {
             return Err("Failed to initialize espeak-ng".into());
@@ -59,11 +54,8 @@ pub fn test_espeak() -> Result<(), Box<dyn std::error::Error>> {
             let mut text_ptr = c_text.as_ptr() as *const c_void;
 
             // Get IPA phonemes
-            let phonemes_ptr = espeak_TextToPhonemes(
-                &mut text_ptr,
-                ESPEAK_CHARS_UTF8,
-                ESPEAK_PHONEMES_IPA,
-            );
+            let phonemes_ptr =
+                espeak_TextToPhonemes(&mut text_ptr, ESPEAK_CHARS_UTF8, ESPEAK_PHONEMES_IPA);
 
             if !phonemes_ptr.is_null() {
                 let phonemes = CStr::from_ptr(phonemes_ptr).to_string_lossy();

@@ -1,6 +1,6 @@
-use std::sync::Arc;
 use ndarray::{Array1, CowArray, IxDyn};
 use ort::{Environment, GraphOptimizationLevel, SessionBuilder, Value};
+use std::sync::Arc;
 
 pub fn run_identity() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize the ONNX Runtime environment

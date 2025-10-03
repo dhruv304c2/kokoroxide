@@ -5,10 +5,7 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Testing Direct Phoneme Input ===\n");
 
     // Initialize TTS
-    let tts_config = TTSConfig::new(
-            "models/kokoro/kokoro.onnx", 
-            "models/kokoro/tokenizer.json"
-        )
+    let tts_config = TTSConfig::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")
         .with_graph_optimization_level(ort::GraphOptimizationLevel::Disable)
         .with_max_tokens_length(512)
         .with_sample_rate(24000);
@@ -21,19 +18,19 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
     let test_cases = vec![
         (
             "Kokoro g2p - Japanese anime",
-            "ʤˌæpənˈiz klˈʌbz ɑɹ ðə bˈɛst plˈʌs ˈænəmA ɪz əmˈAzɪŋ"
+            "ʤˌæpənˈiz klˈʌbz ɑɹ ðə bˈɛst plˈʌs ˈænəmA ɪz əmˈAzɪŋ",
         ),
         (
             "Our system - Japanese anime",
-            "ʤˌæpənˈiz klˈʌbz ɑɹ ðə bˈɛst plˈʌs ˈænɪmˌA ɪz ɐmˈAzɪŋ"
+            "ʤˌæpənˈiz klˈʌbz ɑɹ ðə bˈɛst plˈʌs ˈænɪmˌA ɪz ɐmˈAzɪŋ",
         ),
         (
             "Our system phonemes (short)",
-            "ɪt wʌzə spɹˈɔl vˈYs ænd ə spɹˈɔl ʤˈOk"
+            "ɪt wʌzə spɹˈɔl vˈYs ænd ə spɹˈɔl ʤˈOk",
         ),
         (
             "Kokoro Python phonemes (short)",
-            "ˌɪt wʌz ɐ spɹˈɔl vˈYs ænd ɐ spɹˈɔl ʤˈOk"
+            "ˌɪt wʌz ɐ spɹˈɔl vˈYs ænd ɐ spɹˈɔl ʤˈOk",
         ),
     ];
 
@@ -42,8 +39,13 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
         println!("Input phonemes: '{}'", phonemes);
 
         // Generate speech from phonemes directly
-        let filename = format!("test_phonemes_{}.wav",
-            description.to_lowercase().replace(" ", "_").replace("-", "_"));
+        let filename = format!(
+            "test_phonemes_{}.wav",
+            description
+                .to_lowercase()
+                .replace(" ", "_")
+                .replace("-", "_")
+        );
 
         println!("Generating speech to: {}", filename);
 

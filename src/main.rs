@@ -1,12 +1,11 @@
 use clap::{Parser, Subcommand};
 
 // Internal modules for the binary
-mod test;
+mod espeak;
+mod interactive;
 mod kokoro;
 mod playback;
-mod interactive;
-mod espeak_g2p;
-mod espeak_ipa_tokenizer;
+mod test;
 
 #[derive(Parser)]
 #[command(name = "ronnex")]
@@ -56,38 +55,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Commands::Test { name, text, no_play }) => {
-            match name {
-                TestName::Identity => {
-                    test::identity_test::run_identity()?;
-                }
-                TestName::Kokoro => {
-                    if let Some(custom_text) = text {
-                        test::kokoro_test::run_kokoro_with_text(&custom_text, no_play)?;
-                    } else {
-                        test::kokoro_test::run_kokoro(no_play)?;
-                    }
-                }
-                TestName::AnalyzeIpa => {
-                    test::analyze_ipa::analyze_ipa_in_kokoro()?;
-                }
-                TestName::KokoroChat => {
-                    interactive::run_interactive()?;
-                }
-                TestName::Espeak => {
-                    test::test_espeak::test_espeak()?;
-                }
-                TestName::EspeakTokenizer => {
-                    test::test_espeak_tokenizer::test_espeak_tokenizer()?;
-                }
-                TestName::DirectPhonemes => {
-                    test::test_direct_phonemes::test_direct_phonemes()?;
-                }
-                TestName::RawTokens => {
-                    test::test_raw_tokens::test_raw_tokens()?;
+        Some(Commands::Test {
+            name,
+            text,
+            no_play,
+        }) => match name {
+            TestName::Identity => {
+                test::identity_test::run_identity()?;
+            }
+            TestName::Kokoro => {
+                if let Some(custom_text) = text {
+                    test::kokoro_test::run_kokoro_with_text(&custom_text, no_play)?;
+                } else {
+                    test::kokoro_test::run_kokoro(no_play)?;
                 }
             }
-        }
+            TestName::AnalyzeIpa => {
+                test::analyze_ipa::analyze_ipa_in_kokoro()?;
+            }
+            TestName::KokoroChat => {
+                interactive::run_interactive()?;
+            }
+            TestName::Espeak => {
+                test::test_espeak::test_espeak()?;
+            }
+            TestName::EspeakTokenizer => {
+                test::test_espeak_tokenizer::test_espeak_tokenizer()?;
+            }
+            TestName::DirectPhonemes => {
+                test::test_direct_phonemes::test_direct_phonemes()?;
+            }
+            TestName::RawTokens => {
+                test::test_raw_tokens::test_raw_tokens()?;
+            }
+        },
         None => {
             println!("No command specified. Use --help for usage information.");
         }

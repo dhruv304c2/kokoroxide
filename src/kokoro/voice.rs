@@ -1,7 +1,7 @@
+use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use std::error::Error;
 
 #[derive(Clone)]
 pub struct VoiceStyle {
@@ -25,7 +25,11 @@ impl VoiceStyle {
         result
     }
 
-    pub fn get_style_vector_for_token_length(&self, token_length: usize, vector_size: usize) -> Vec<f32> {
+    pub fn get_style_vector_for_token_length(
+        &self,
+        token_length: usize,
+        vector_size: usize,
+    ) -> Vec<f32> {
         // Select style vector based on token length, matching Python implementation
         // voices[len(tokens)] where voices has shape (-1, 1, 256)
         let offset = token_length * self.vector_size;
@@ -51,7 +55,8 @@ pub fn load_voice_style<P: AsRef<Path>>(path: P) -> Result<VoiceStyle, Box<dyn E
     file.read_to_end(&mut buffer)?;
 
     // Convert bytes to f32 array (assuming little-endian)
-    let style_data: Vec<f32> = buffer.chunks_exact(4)
+    let style_data: Vec<f32> = buffer
+        .chunks_exact(4)
         .map(|chunk| f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect();
 

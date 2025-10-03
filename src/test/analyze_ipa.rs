@@ -7,13 +7,14 @@ pub fn analyze_ipa_in_kokoro() -> Result<(), Box<dyn std::error::Error>> {
     let tokenizer_content = std::fs::read_to_string("models/kokoro/tokenizer.json")?;
     let tokenizer_json: serde_json::Value = serde_json::from_str(&tokenizer_content)?;
 
-    let vocab = tokenizer_json["model"]["vocab"].as_object()
+    let vocab = tokenizer_json["model"]["vocab"]
+        .as_object()
         .ok_or("No vocab found")?;
 
     // Common IPA symbols to look for (from rustruut output)
     let ipa_symbols = vec![
-        "æ", "ɹ", "eɪ", "ɪ", "ŋ", "ɑ", "ə", "ɛ", "ɔ", "ʊ", "ʌ",
-        "i", "u", "o", "a", "e", // basic vowels
+        "æ", "ɹ", "eɪ", "ɪ", "ŋ", "ɑ", "ə", "ɛ", "ɔ", "ʊ", "ʌ", "i", "u", "o", "a",
+        "e", // basic vowels
         "θ", "ð", "ʃ", "ʒ", "tʃ", "dʒ", // fricatives/affricates
         "ˈ", "ˌ", // stress markers
     ];
@@ -53,7 +54,8 @@ pub fn analyze_ipa_in_kokoro() -> Result<(), Box<dyn std::error::Error>> {
     sorted.sort_by_key(|(k, _)| k.as_str());
 
     for (symbol, id) in sorted {
-        let unicode: String = symbol.chars()
+        let unicode: String = symbol
+            .chars()
             .map(|c| format!("U+{:04X}", c as u32))
             .collect::<Vec<_>>()
             .join(" ");

@@ -25,12 +25,11 @@
 //! ```
 
 // Internal modules - not exposed to library users
-mod espeak_g2p;
-mod espeak_ipa_tokenizer;
-#[allow(dead_code)]
-mod playback;
+mod espeak;
 #[allow(dead_code)]
 mod interactive;
+#[allow(dead_code)]
+mod playback;
 #[allow(dead_code)]
 mod test;
 
@@ -39,13 +38,7 @@ mod test;
 pub mod kokoro;
 
 // Re-export main types for convenience
-pub use kokoro::{
-    KokoroTTS,
-    TTSConfig,
-    GeneratedAudio,
-    VoiceStyle,
-    load_voice_style,
-};
+pub use kokoro::{load_voice_style, GeneratedAudio, KokoroTTS, TTSConfig, VoiceStyle};
 
 // Re-export ONNX GraphOptimizationLevel for configuration
 pub use ort::GraphOptimizationLevel;
