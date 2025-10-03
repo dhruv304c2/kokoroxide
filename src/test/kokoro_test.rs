@@ -1,3 +1,4 @@
+use ort::execution_providers::CoreMLExecutionProviderOptions;
 use crate::kokoro::{load_voice_style, KokoroTTS, TTSConfig};
 use crate::playback::play_wav_file;
 
@@ -6,10 +7,15 @@ pub fn run_kokoro(no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
+    println!("Initializing Kokoro TTS...");
+
     let tts_config = TTSConfig::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")
         .with_graph_optimization_level(ort::GraphOptimizationLevel::Disable)
         .with_max_tokens_length(512)
-        .with_sample_rate(24000);
+        .with_sample_rate(24000)
+        .with_execution_providers(vec![
+            ort::ExecutionProvider::CoreML(CoreMLExecutionProviderOptions::default())
+        ]);
 
     let tts = KokoroTTS::with_config(tts_config)?;
 

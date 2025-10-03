@@ -17,7 +17,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-kokoroxide = "0.1.2"
+kokoroxide = "0.1.3"
 ```
 
 ## Quick Start
@@ -119,13 +119,18 @@ let audio = tts.generate_from_tokens(&tokens, &voice, 1.0)?;
 ### TTSConfig Options
 
 ```rust
-use ort::GraphOptimizationLevel;
+use ort::{execution_providers::CoreMLExecutionProviderOptions, ExecutionProvider, GraphOptimizationLevel};
 
 let config = TTSConfig::new(model_path, tokenizer_path)
     .with_max_tokens_length(512)    // Maximum token sequence length
     .with_sample_rate(24000)        // Audio sample rate in Hz
-    .with_graph_optimization_level(GraphOptimizationLevel::Level3); // ONNX graph optimization
+    .with_graph_optimization_level(GraphOptimizationLevel::Level3)
+    .with_execution_providers(vec![
+        ExecutionProvider::CoreML(CoreMLExecutionProviderOptions::default()),
+    ]); // Optional hardware acceleration
 ```
+
+If you don't need custom providers, you can skip the call to `with_execution_providers` and the default CPU provider will be used.
 
 #### Graph Optimization Levels
 
