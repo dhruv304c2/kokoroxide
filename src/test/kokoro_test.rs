@@ -1,4 +1,4 @@
-use crate::kokoro::{KokoroTTS, load_voice_style, normalize_for_kokoro};
+use crate::kokoro::{load_voice_style, KokoroTTS, TTSConfig};
 use crate::playback::play_wav_file;
 
 pub fn run_kokoro(no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
@@ -6,15 +6,18 @@ pub fn run_kokoro(no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn run_kokoro_with_text(text: &str, no_play: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
+    let tts_config = TTSConfig::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")
+        .with_graph_optimization_level(ort::GraphOptimizationLevel::Disable)
+        .with_max_tokens_length(512)
+        .with_sample_rate(24000);
+
+    let tts = KokoroTTS::with_config(tts_config)?;
 
     let voice = load_voice_style("models/kokoro/af.bin")?;
 
-    let normalized_text = normalize_for_kokoro(text.to_string());
-
     println!("Generating speech for: \"{}\"", text);
     let output_path = "kokoro_test_output.wav";
-    let audio = tts.generate_speech(&normalized_text, &voice, 1.0)?;
+    let audio = tts.generate_speech(text, &voice, 1.0)?;
 
     println!("Duration: {:.2} seconds", audio.duration_seconds);
 

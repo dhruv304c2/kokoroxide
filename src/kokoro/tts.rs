@@ -19,7 +19,7 @@ impl TTSConfig {
         TTSConfig {
             model_path: model_path.to_string(),
             tokenizer_path: tokenizer_path.to_string(),
-            max_length: 64,
+            max_length: 512,
             sample_rate: 22050,
             graph_level: GraphOptimizationLevel::Level3
         }
@@ -89,10 +89,6 @@ pub struct KokoroTTS {
 }
 
 impl KokoroTTS {
-    pub fn new(model_path: &str, tokenizer_path: &str) -> Result<Self, Box<dyn Error>> {
-        let config = TTSConfig::new(model_path, tokenizer_path);
-        Self::with_config(config)
-    }
 
     pub fn with_config(config: TTSConfig) -> Result<Self, Box<dyn Error>> {
         let env = Arc::new(
@@ -161,7 +157,8 @@ impl KokoroTTS {
     ) -> Result<GeneratedAudio, Box<dyn Error>> {
 
         let input_ids = Array2::<i64>::from_shape_vec((1, tokens.len()), tokens.to_vec())?;
-        let style_vector = voice_style.get_style_vector(256);
+        // Use token length to select the appropriate style vector, matching Python implementation
+        let style_vector = voice_style.get_style_vector_for_token_length(tokens.len(), 256);
         let style = Array2::<f32>::from_shape_vec((1, 256), style_vector)?;
         let speed_array = Array1::<f32>::from_vec(vec![speed]);
 

@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 use std::time::Instant;
-use crate::kokoro::{KokoroTTS, load_voice_style, normalize_for_kokoro};
+use crate::kokoro::{load_voice_style, KokoroTTS, TTSConfig};
 use crate::playback::play_wav_file;
 
 pub struct InteractiveTTS {
@@ -12,7 +12,15 @@ pub struct InteractiveTTS {
 impl InteractiveTTS {
     /// Create a new interactive TTS session
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
+        let tts_config = TTSConfig::new(
+            "models/kokoro/kokoro.onnx", 
+            "models/kokoro/tokenizer.json"
+        )
+        .with_graph_optimization_level(ort::GraphOptimizationLevel::Disable)
+        .with_max_tokens_length(512)
+        .with_sample_rate(24000);
+
+        let tts = KokoroTTS::with_config(tts_config)?;
         let voice_style = load_voice_style("models/kokoro/af.bin")?;
 
         Ok(InteractiveTTS {
@@ -29,16 +37,13 @@ impl InteractiveTTS {
         println!("Type 'quit', 'exit', or 'q' to stop.\n");
 
         loop {
-            // Prompt for input
             print!("> ");
             io::stdout().flush()?;
 
-            // Read user input
             let mut input = String::new();
             io::stdin().read_line(&mut input)?;
             let input = input.trim();
 
-            // Check for exit commands
             if input.is_empty() {
                 continue;
             }
@@ -48,7 +53,6 @@ impl InteractiveTTS {
                 break;
             }
 
-            // Process the input
             if let Err(e) = self.process_text(input) {
                 eprintln!("Error: {}", e);
                 println!("Please try again.");
@@ -60,29 +64,15 @@ impl InteractiveTTS {
 
     /// Process a single text input
     fn process_text(&mut self, text: &str) -> Result<(), Box<dyn std::error::Error>> {
-        // Normalize text
-        let normalized = normalize_for_kokoro(text.to_string());
-
-        // Start timing
         let start_time = Instant::now();
-
-        // Generate filename
         self.output_counter += 1;
         let filename = "interactive_tts.wav";
-
-        // Generate speech
-        let audio = self.tts.generate_speech(&normalized, &self.voice_style, 1.0)?;
-
-        // Save the audio file
+        let audio = self.tts.generate_speech(text, &self.voice_style, 1.0)?;
         audio.save_to_wav(&filename)?;
-
-        // Calculate generation time
         let generation_time = start_time.elapsed();
 
-        // Play the audio
         play_wav_file(&filename)?;
 
-        // Print concise stats
         println!("Generated in {:.2}s ({:.1}x realtime)",
                  generation_time.as_secs_f32(),
                  audio.duration_seconds / generation_time.as_secs_f32());
@@ -90,7 +80,6 @@ impl InteractiveTTS {
         Ok(())
     }
 
-    /// Get statistics about the session
     pub fn get_stats(&self) -> String {
         format!("Total generations: {}", self.output_counter)
     }
@@ -103,7 +92,16 @@ pub fn run_interactive_tts_with_options(
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!("Initializing Interactive TTS with custom options...");
 
-    let tts = KokoroTTS::new("models/kokoro/kokoro.onnx", "models/kokoro/tokenizer.json")?;
+    let tts_config = TTSConfig::new(
+            "models/kokoro/kokoro.onnx", 
+            "models/kokoro/tokenizer.json"
+        )
+        .with_graph_optimization_level(ort::GraphOptimizationLevel::Disable)
+        .with_max_tokens_length(512)
+        .with_sample_rate(24000);
+
+    let tts = KokoroTTS::with_config(tts_config)?;
+
     let voice_path = voice_path.unwrap_or("models/kokoro/af.bin");
     let voice_style = load_voice_style(voice_path)?;
 
@@ -134,7 +132,6 @@ pub fn run_interactive_tts_with_options(
         }
 
         // Process with timing
-        let normalized = normalize_for_kokoro(input.to_string());
         let start_time = Instant::now();
 
         output_counter += 1;
@@ -142,7 +139,7 @@ pub fn run_interactive_tts_with_options(
 
         println!("\nGenerating speech for: \"{}\"", input);
 
-        match tts.generate_speech(&normalized, &voice_style, speed) {
+        match tts.generate_speech(input, &voice_style, speed) {
             Ok(audio) => {
                 // Save the audio file
                 audio.save_to_wav(&filename)?;
