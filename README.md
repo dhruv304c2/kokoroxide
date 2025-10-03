@@ -23,24 +23,34 @@ kokoroxide = "0.1.0"
 ## Quick Start
 
 ```rust
-use kokoroxide::{KokoroTTS, VoiceStyle, load_voice_style};
+use kokoroxide::{load_voice_style, KokoroTTS, TTSConfig};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Initialize TTS with model and tokenizer
-    let tts = KokoroTTS::new("path/to/model.onnx", "path/to/tokenizer.json")?;
+    // Configure the ONNX model + tokenizer that Kokoro requires.
+    // These files live outside the crate; download them from Kokoro's distribution (https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX).
+    let config = TTSConfig::new("path/to/kokoro.onnx", "path/to/tokenizer.json")
+        .with_sample_rate(24000)
+        .with_max_tokens_length(512)
+        .with_graph_optimization_level(kokoroxide::GraphOptimizationLevel::Disable);
 
-    // Load a voice style
+    // Build the speech engine with the explicit configuration so advanced knobs are available.
+    let tts_service = KokoroTTS::with_config(config)?;
+
+    // Load a voice style vector (.bin) that controls prosody and speaker identity.
     let voice = load_voice_style("path/to/voice.bin")?;
 
-    // Generate speech
-    let audio = tts.speak("Hello, world!", &voice)?;
+    // Generate speech at 1.0x speed for the requested text.
+    let text = "Hello, this is a text-to-speech synthesis example.";
+    let audio = tts_service.generate_speech(text, &voice, 1.0)?;
 
-    // Save to file
-    audio.save_to_wav("output.wav")?;
+    // Persist the synthesized waveform to a WAV file for playback.
+    audio.save_to_wav("path/to/output.wav")?;
 
     Ok(())
 }
 ```
+
+For a complete runnable example pointing at real assets, see the `kokoroxide-demo` sample project in this workspace (`kokoroxide-demo/src/main.rs`).
 
 ## API Overview
 
@@ -193,7 +203,7 @@ export DYLD_LIBRARY_PATH=/path/to/espeak-ng/lib:$DYLD_LIBRARY_PATH  # macOS
 ## Model Files
 
 Download the Kokoro model files from the official repository:
-- Model: [Kokoro-82M ONNX](https://huggingface.co/hexgrad/Kokoro-82M)
+- Model: [Kokoro-82M ONNX](https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX)
 - Required files:
   - `*.onnx` - The model file
   - `tokenizer.json` - Tokenizer configuration
