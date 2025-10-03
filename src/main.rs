@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
 
-pub mod test;
-pub mod kokoro;
-pub mod playback;
-pub mod interactive;
-pub mod espeak_g2p;
-pub mod espeak_ipa_tokenizer;
+// Internal modules for the binary
+mod test;
+mod kokoro;
+mod playback;
+mod interactive;
+mod espeak_g2p;
+mod espeak_ipa_tokenizer;
 
 #[derive(Parser)]
 #[command(name = "ronnex")]

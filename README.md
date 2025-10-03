@@ -61,14 +61,14 @@ let tts = KokoroTTS::with_config(config)?;
 ```
 
 #### `VoiceStyle`
-Represents voice characteristics as a style vector.
+Represents voice characteristics as a style vector. Voice files contain multiple style vectors indexed by token length.
 
 ```rust
 // Load from binary file
 let voice = load_voice_style("voice.bin")?;
 
-// Create custom voice
-let custom_voice = VoiceStyle::new(vec![0.1, 0.2, ...]);
+// Create custom voice with vector size
+let custom_voice = VoiceStyle::new(vec![0.1, 0.2, ...], 256);
 ```
 
 #### `GeneratedAudio`
@@ -102,6 +102,7 @@ let audio = tts.generate_speech_from_phonemes("həˈloʊ wɜːld", &voice, 1.0)?
 ```rust
 let tokens = vec![101, 2234, 1567, 102]; // Pre-tokenized input
 let audio = tts.generate_from_tokens(&tokens, &voice, 1.0)?;
+```
 
 ## Configuration
 
@@ -111,8 +112,8 @@ let audio = tts.generate_from_tokens(&tokens, &voice, 1.0)?;
 use ort::GraphOptimizationLevel;
 
 let config = TTSConfig::new(model_path, tokenizer_path)
-    .with_max_tokens_length(64)     // Maximum token sequence length
-    .with_sample_rate(22050)        // Audio sample rate in Hz
+    .with_max_tokens_length(512)    // Maximum token sequence length
+    .with_sample_rate(24000)        // Audio sample rate in Hz
     .with_graph_optimization_level(GraphOptimizationLevel::Level3); // ONNX graph optimization
 ```
 
@@ -125,34 +126,91 @@ The `with_graph_optimization_level()` method allows you to control ONNX Runtime'
 - `GraphOptimizationLevel::Level2` - Extended optimizations
 - `GraphOptimizationLevel::Level3` - Maximum optimizations (default)
 
-## Requirements
+## System Requirements
 
-- Rust 1.70+
-- ONNX Runtime (automatically downloaded via `ort` crate)
-- Kokoro model files (.onnx model and tokenizer.json)
+### Prerequisites
+
+1. **Rust 1.70+**
+
+2. **espeak-ng** (required for text-to-phoneme conversion):
+   - **Ubuntu/Debian**: `sudo apt-get install espeak-ng libespeak-ng-dev`
+   - **macOS**: `brew install espeak-ng`
+   - **Windows**: Download from [espeak-ng releases](https://github.com/espeak-ng/espeak-ng/releases)
+   - **Arch Linux**: `sudo pacman -S espeak-ng`
+
+3. **ONNX Runtime** (automatically downloaded via `ort` crate)
+
+4. **Kokoro model files**:
+   - Model file (e.g., `kokoro-v0_19.onnx`)
+   - Tokenizer configuration (`tokenizer.json`)
+   - Voice style files (`.bin` format)
+
+### Build Configuration
+
+The crate automatically links to espeak-ng based on your platform:
+- **macOS**: Looks for espeak-ng in `/opt/homebrew/lib` (Homebrew default)
+- **Linux**: Uses system library paths
+
+If espeak-ng is installed in a non-standard location, you may need to set:
+```bash
+export LD_LIBRARY_PATH=/path/to/espeak-ng/lib:$LD_LIBRARY_PATH  # Linux
+export DYLD_LIBRARY_PATH=/path/to/espeak-ng/lib:$DYLD_LIBRARY_PATH  # macOS
+```
+
+### Environment Variables
+
+- **`DEBUG_PHONEMES`** - Enable phoneme debugging output:
+  ```bash
+  DEBUG_PHONEMES=1 cargo run
+  ```
+  This will print:
+  - Input text
+  - Espeak IPA output
+  - Converted Misaki phonemes
+
+- **`DEBUG_TOKENS`** - Enable token debugging output:
+  ```bash
+  DEBUG_TOKENS=1 cargo run
+  ```
+  This will print:
+  - Generated token IDs array
+
+- **`DEBUG_TIMING`** - Enable performance timing logs:
+  ```bash
+  DEBUG_TIMING=1 cargo run
+  ```
+  This will print:
+  - Phoneme tokenization time
+  - Espeak IPA conversion time
+  - Total tokenization time
+
+- **All debug modes**:
+  ```bash
+  DEBUG_PHONEMES=1 DEBUG_TOKENS=1 DEBUG_TIMING=1 cargo run
+  ```
 
 ## Model Files
 
-You'll need:
-1. A Kokoro ONNX model file (e.g., `kokoro-v0_19.onnx`)
-2. A tokenizer configuration file (`tokenizer.json`)
-3. Voice style files (`.bin` format)
+Download the Kokoro model files from the official repository:
+- Model: [Kokoro-82M ONNX](https://huggingface.co/hexgrad/Kokoro-82M)
+- Required files:
+  - `*.onnx` - The model file
+  - `tokenizer.json` - Tokenizer configuration
+  - Voice files (`*.bin`) - Style vectors for different voices
 
 ## Examples
 
 ### Basic TTS Application
 
 ```rust
-use kokoroxide::{KokoroTTS, load_voice_style, normalize_for_kokoro};
+use kokoroxide::{KokoroTTS, load_voice_style};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tts = KokoroTTS::new("model.onnx", "tokenizer.json")?;
     let voice = load_voice_style("voice.bin")?;
 
     let text = "Welcome to kokoroxide TTS!";
-    let normalized = normalize_for_kokoro(text.to_string());
-
-    let audio = tts.generate_speech(&normalized, &voice, 1.0)?;
+    let audio = tts.generate_speech(text, &voice, 1.0)?;
     audio.save_to_wav("welcome.wav")?;
 
     println!("Generated {} seconds of audio", audio.duration_seconds);

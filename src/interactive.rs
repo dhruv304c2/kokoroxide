@@ -73,9 +73,11 @@ impl InteractiveTTS {
 
         play_wav_file(&filename)?;
 
-        println!("Generated in {:.2}s ({:.1}x realtime)",
-                 generation_time.as_secs_f32(),
-                 audio.duration_seconds / generation_time.as_secs_f32());
+        if std::env::var("DEBUG_TIMING").is_ok() {
+            println!("Generated in {:.2}s ({:.1}x realtime)",
+                     generation_time.as_secs_f32(),
+                     audio.duration_seconds / generation_time.as_secs_f32());
+        }
 
         Ok(())
     }
@@ -146,10 +148,12 @@ pub fn run_interactive_tts_with_options(
 
                 let generation_time = start_time.elapsed();
 
-                println!("Generation completed in: {:.2}s", generation_time.as_secs_f32());
-                println!("Audio duration: {:.2}s", audio.duration_seconds);
-                println!("Generation speed: {:.2}x realtime",
-                         audio.duration_seconds / generation_time.as_secs_f32());
+                if std::env::var("DEBUG_TIMING").is_ok() {
+                    println!("Generation completed in: {:.2}s", generation_time.as_secs_f32());
+                    println!("Audio duration: {:.2}s", audio.duration_seconds);
+                    println!("Generation speed: {:.2}x realtime",
+                             audio.duration_seconds / generation_time.as_secs_f32());
+                }
 
                 println!("Playing audio...");
                 let play_start = Instant::now();
@@ -158,10 +162,14 @@ pub fn run_interactive_tts_with_options(
                     eprintln!("Playback error: {}", e);
                 } else {
                     let play_time = play_start.elapsed();
-                    println!("Playback completed in: {:.2}s", play_time.as_secs_f32());
+                    if std::env::var("DEBUG_TIMING").is_ok() {
+                        println!("Playback completed in: {:.2}s", play_time.as_secs_f32());
+                    }
                 }
 
-                println!("Total time: {:.2}s\n", start_time.elapsed().as_secs_f32());
+                if std::env::var("DEBUG_TIMING").is_ok() {
+                    println!("Total time: {:.2}s\n", start_time.elapsed().as_secs_f32());
+                }
             }
             Err(e) => {
                 eprintln!("Generation error: {}", e);

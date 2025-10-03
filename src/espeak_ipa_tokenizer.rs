@@ -174,12 +174,18 @@ impl EspeakIpaTokenizer {
             truncated.push(self.bos_id);
             truncated.extend_from_slice(&tokens[1..1 + keep_inner]);
             truncated.push(self.eos_id);
-            println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
+            if std::env::var("DEBUG_TIMING").is_ok() {
+                println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
+            }
             return Ok(truncated);
         }
 
-        println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
-        println!("tokens = {:?}", tokens);
+        if std::env::var("DEBUG_TIMING").is_ok() {
+            println!("Direct phoneme tokenization time: {:?}", start_time.elapsed());
+        }
+        if std::env::var("DEBUG_TOKENS").is_ok() {
+            println!("tokens = {:?}", tokens);
+        }
         Ok(tokens)
     }
 
@@ -193,7 +199,9 @@ impl EspeakIpaTokenizer {
 
         let ipa_start = Instant::now();
         let ipa_text = self.text_to_ipa(text)?;
-        println!("Phoneme tokenization (espeak IPA conversion) took: {:?}", ipa_start.elapsed());
+        if std::env::var("DEBUG_TIMING").is_ok() {
+            println!("Phoneme tokenization (espeak IPA conversion) took: {:?}", ipa_start.elapsed());
+        }
 
         let mut inner = self.tokenize_longest(&ipa_text);
         tokens.append(&mut inner);
@@ -207,12 +215,18 @@ impl EspeakIpaTokenizer {
             truncated.push(self.bos_id);
             truncated.extend_from_slice(&tokens[1..1 + keep_inner]);
             truncated.push(self.eos_id);
-            println!("Total tokenization time: {:?}", start_time.elapsed());
+            if std::env::var("DEBUG_TIMING").is_ok() {
+                println!("Total tokenization time: {:?}", start_time.elapsed());
+            }
             return Ok(truncated);
         }
 
-        println!("Total tokenization time: {:?}", start_time.elapsed());
-        println!("tokens = {:?}", tokens);
+        if std::env::var("DEBUG_TIMING").is_ok() {
+            println!("Total tokenization time: {:?}", start_time.elapsed());
+        }
+        if std::env::var("DEBUG_TOKENS").is_ok() {
+            println!("tokens = {:?}", tokens);
+        }
         Ok(tokens)
     }
 }
