@@ -17,7 +17,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-kokoroxide = "0.1.0"
+kokoroxide = "0.1.1"
 ```
 
 ## Quick Start
