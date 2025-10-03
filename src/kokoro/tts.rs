@@ -3,6 +3,7 @@ use crate::espeak::EspeakIpaTokenizer;
 use ndarray::{Array1, Array2, CowArray, IxDyn};
 use ort::{Environment, GraphOptimizationLevel, Session, SessionBuilder, Value};
 use std::error::Error;
+use std::io::Cursor;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -49,6 +50,12 @@ pub struct GeneratedAudio {
 
 impl GeneratedAudio {
     pub fn save_to_wav<P: AsRef<Path>>(&self, path: P) -> Result<(), Box<dyn Error>> {
+        let bytes = self.to_wav_bytes()?;
+        std::fs::write(path, bytes)?;
+        Ok(())
+    }
+
+    pub fn to_wav_bytes(&self) -> Result<Vec<u8>, Box<dyn Error>> {
         let spec = hound::WavSpec {
             channels: 1,
             sample_rate: self.sample_rate,
@@ -56,29 +63,33 @@ impl GeneratedAudio {
             sample_format: hound::SampleFormat::Int,
         };
 
-        let mut writer = hound::WavWriter::create(path, spec)?;
+        let mut cursor = Cursor::new(Vec::new());
+        {
+            let mut writer = hound::WavWriter::new(&mut cursor, spec)?;
 
-        // Add 0.1 seconds of silence at the beginning
-        let silence_samples = (self.sample_rate as f32 * 0.1) as usize;
-        for _ in 0..silence_samples {
-            writer.write_sample(0i16)?;
+            // Add 0.1 seconds of silence at the beginning
+            let silence_samples = (self.sample_rate as f32 * 0.1) as usize;
+            for _ in 0..silence_samples {
+                writer.write_sample(0i16)?;
+            }
+
+            // Write the actual audio
+            for &sample in &self.samples {
+                // Clamp to prevent overflow
+                let clamped = sample.max(-1.0).min(1.0);
+                let amplitude = (clamped * i16::MAX as f32) as i16;
+                writer.write_sample(amplitude)?;
+            }
+
+            // Add 0.1 seconds of silence at the end
+            for _ in 0..silence_samples {
+                writer.write_sample(0i16)?;
+            }
+
+            writer.finalize()?;
         }
 
-        // Write the actual audio
-        for &sample in &self.samples {
-            // Clamp to prevent overflow
-            let clamped = sample.max(-1.0).min(1.0);
-            let amplitude = (clamped * i16::MAX as f32) as i16;
-            writer.write_sample(amplitude)?;
-        }
-
-        // Add 0.1 seconds of silence at the end
-        for _ in 0..silence_samples {
-            writer.write_sample(0i16)?;
-        }
-
-        writer.finalize()?;
-        Ok(())
+        Ok(cursor.into_inner())
     }
 }
 
