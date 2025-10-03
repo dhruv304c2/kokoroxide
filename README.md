@@ -1,6 +1,6 @@
 # kokoroxide [WIP]
 
-A high-performance Rust implementation of Kokoro TTS (Text-to-Speech) synthesis, leveraging ONNX Runtime for efficient neural speech generation. Uses espeak-ng for text-to-phoneme conversion, with built-in conversion logic into Misaki phoneme notation expected by Kokoro models.
+A high-performance Rust implementation of Kokoro TTS (Text-to-Speech) synthesis, leveraging ONNX Runtime for efficient neural speech generation. Uses espeak-ng for text-to-phoneme conversion, with built-in conversion logic into Misaki phoneme notation expected by Kokoro models. Distributed under a dual MIT/Apache-2.0 license to match the broader Rust ecosystem.
 
 > **Note:** Currently only supports and has been tested with American English. Contributions for different languages are very welcome! 
 
@@ -144,6 +144,7 @@ The `with_graph_optimization_level()` method allows you to control ONNX Runtime'
    - Model file (e.g., `kokoro-v0_19.onnx`)
    - Tokenizer configuration (`tokenizer.json`)
    - Voice style files (`.bin` format)
+   - Downloaded at runtime or managed outside the crate package to keep the published crate lightweight
 
 ### Build Configuration
 
@@ -197,6 +198,7 @@ Download the Kokoro model files from the official repository:
   - `*.onnx` - The model file
   - `tokenizer.json` - Tokenizer configuration
   - Voice files (`*.bin`) - Style vectors for different voices
+  - Provide these assets at runtime (they are not packaged with the crate to keep the published tarball lightweight)
 
 ## Examples
 
