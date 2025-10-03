@@ -20,7 +20,7 @@ impl TTSConfig {
             model_path: model_path.to_string(),
             tokenizer_path: tokenizer_path.to_string(),
             max_length: 512,
-            sample_rate: 22050,
+            sample_rate: 24000,
             graph_level: GraphOptimizationLevel::Level3
         }
     }
