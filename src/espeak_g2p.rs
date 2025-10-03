@@ -20,6 +20,7 @@ extern "C" {
         phonememode: c_int,
     ) -> *const c_char;
 
+    #[allow(dead_code)]
     fn espeak_Terminate() -> c_int;
 }
 
@@ -113,11 +114,6 @@ impl EspeakG2P {
 
             Ok(all_phonemes)
         }
-    }
-
-    pub fn word_to_ipa(&self, word: &str) -> Result<String, Box<dyn std::error::Error>> {
-        // For backward compatibility - just calls text_to_ipa
-        self.text_to_ipa(word)
     }
 }
 

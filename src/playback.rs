@@ -38,31 +38,37 @@ impl AudioPlayer {
     }
 
     /// Check if audio is still playing
+    #[allow(dead_code)]
     pub fn is_playing(&self) -> bool {
         !self.sink.empty()
     }
 
     /// Pause playback
+    #[allow(dead_code)]
     pub fn pause(&self) {
         self.sink.pause();
     }
 
     /// Resume playback
+    #[allow(dead_code)]
     pub fn resume(&self) {
         self.sink.play();
     }
 
     /// Stop playback
+    #[allow(dead_code)]
     pub fn stop(&self) {
         self.sink.stop();
     }
 
     /// Set volume (0.0 to 1.0)
+    #[allow(dead_code)]
     pub fn set_volume(&self, volume: f32) {
         self.sink.set_volume(volume);
     }
 
     /// Get current volume
+    #[allow(dead_code)]
     pub fn volume(&self) -> f32 {
         self.sink.volume()
     }
@@ -76,6 +82,7 @@ pub fn play_wav_file<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::
 }
 
 /// Play a WAV file with a custom message
+#[allow(dead_code)]
 pub fn play_wav_with_message<P: AsRef<Path>>(path: P, message: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", message);
     play_wav_file(path)

@@ -2,6 +2,7 @@ use crate::espeak_g2p::EspeakG2P;
 use crate::espeak_ipa_tokenizer::EspeakIpaTokenizer;
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub fn test_misaki_conversion() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Misaki phoneme conversion according to spec\n");
 
@@ -60,9 +61,8 @@ pub fn test_misaki_conversion() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", "-".repeat(90));
 
     for (word, espeak_raw,_) in test_cases {
-        // Get the raw espeak output
         if espeak_raw.is_empty() {
-            g2p.word_to_ipa(word)?
+            g2p.text_to_ipa(word)?
         } else {
             espeak_raw.to_string()
         };
@@ -70,7 +70,6 @@ pub fn test_misaki_conversion() -> Result<(), Box<dyn std::error::Error>> {
         // Set DEBUG_PHONEMES env var to see the conversion
         std::env::set_var("DEBUG_PHONEMES", "1");
 
-        // Use the tokenizer which will do the conversion internally
         let _ = tokenizer.encode(word, None)?;
 
         std::env::remove_var("DEBUG_PHONEMES");

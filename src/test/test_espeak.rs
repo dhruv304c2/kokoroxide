@@ -23,10 +23,11 @@ extern "C" {
 }
 
 // Constants
+#[allow(dead_code)]
 const AUDIO_OUTPUT_SYNCHRONOUS: c_int = 0x01;
 const AUDIO_OUTPUT_RETRIEVAL: c_int = 0x02;
-const espeakPHONEMES_IPA: c_int = 0x02;
-const espeakCHARS_UTF8: c_int = 1;
+const ESPEAK_PHONEMES_IPA: c_int = 0x02;
+const ESPEAK_CHARS_UTF8: c_int = 1;
 
 pub fn test_espeak() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing espeak-ng FFI for G2P conversion");
@@ -60,8 +61,8 @@ pub fn test_espeak() -> Result<(), Box<dyn std::error::Error>> {
             // Get IPA phonemes
             let phonemes_ptr = espeak_TextToPhonemes(
                 &mut text_ptr,
-                espeakCHARS_UTF8,
-                espeakPHONEMES_IPA,
+                ESPEAK_CHARS_UTF8,
+                ESPEAK_PHONEMES_IPA,
             );
 
             if !phonemes_ptr.is_null() {

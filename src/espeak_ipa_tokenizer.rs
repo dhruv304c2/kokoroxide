@@ -100,12 +100,9 @@ impl EspeakIpaTokenizer {
         result
     }
 
-    /// Convert text to IPA using espeak-ng
     fn text_to_ipa(&self, text: &str) -> Result<String, Box<dyn Error>> {
-        // Get IPA from espeak
         let ipa = self.g2p.text_to_ipa(text)?;
 
-        // Convert to Misaki phonemes
         let misaki_phonemes = self.espeak_ipa_to_misaki(&ipa);
 
         if std::env::var("DEBUG_PHONEMES").is_ok() {

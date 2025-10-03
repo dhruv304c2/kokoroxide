@@ -88,6 +88,7 @@ impl InteractiveTTS {
 }
 
 /// Run interactive TTS with custom settings
+#[allow(dead_code)]
 pub fn run_interactive_tts_with_options(
     speed: f32,
     voice_path: Option<&str>,

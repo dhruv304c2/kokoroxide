@@ -70,6 +70,7 @@ pub fn test_direct_phonemes() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn run_phoneme_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Phoneme Comparison Test ===\n");
 

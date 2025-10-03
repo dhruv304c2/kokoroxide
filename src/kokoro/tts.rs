@@ -189,6 +189,7 @@ impl KokoroTTS {
         }
     }
 
+    #[allow(dead_code)]
     pub fn speak(&self, text: &str, voice_style: &VoiceStyle) -> Result<GeneratedAudio, Box<dyn Error>> {
         self.generate_speech(text, voice_style, 1.0)
     }

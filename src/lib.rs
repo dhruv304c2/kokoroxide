@@ -27,8 +27,11 @@
 // Internal modules - not exposed to library users
 mod espeak_g2p;
 mod espeak_ipa_tokenizer;
+#[allow(dead_code)]
 mod playback;
+#[allow(dead_code)]
 mod interactive;
+#[allow(dead_code)]
 mod test;
 
 // Public API modules
