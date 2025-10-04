@@ -667,7 +667,7 @@ dependencies = [
 
 [[package]]
 name = "kokoroxide"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "clang-sys",
  "clap",
