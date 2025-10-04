@@ -103,27 +103,40 @@ impl GeneratedAudio {
 pub struct KokoroTTS {
     session: Session,
     tokenizer: EspeakIpaTokenizer,
-    config: TTSConfig,
+    sample_rate: u32,
 }
 
 impl KokoroTTS {
     pub fn with_config(config: TTSConfig) -> Result<Self, Box<dyn Error>> {
+        let TTSConfig {
+            model_path,
+            tokenizer_path,
+            max_length,
+            sample_rate,
+            graph_level,
+            execution_provider,
+        } = config;
+
         let env = Arc::new(Environment::builder().with_name("kokoro_tts").build()?);
 
-        let optimization = match config.graph_level {
+        let optimization = match graph_level {
             GraphOptimizationLevel::Disable => GraphOptimizationLevel::Disable,
             GraphOptimizationLevel::Level1 => GraphOptimizationLevel::Level1,
             GraphOptimizationLevel::Level2 => GraphOptimizationLevel::Level2,
             GraphOptimizationLevel::Level3 => GraphOptimizationLevel::Level3,
         };
 
-        let session = SessionBuilder::new(&env)?
+        let mut builder = SessionBuilder::new(&env)?
             .with_optimization_level(optimization)?
-            .with_parallel_execution(true)?
-            .with_execution_providers(config.execution_provider.clone())?
-            .with_model_from_file(&config.model_path)?;
+            .with_parallel_execution(true)?;
 
-        let tokenizer_content = std::fs::read_to_string(&config.tokenizer_path)?;
+        if !execution_provider.is_empty() {
+            builder = builder.with_execution_providers(&execution_provider)?;
+        }
+
+        let session = builder.with_model_from_file(&model_path)?;
+
+        let tokenizer_content = std::fs::read_to_string(&tokenizer_path)?;
         let tokenizer_json: serde_json::Value = serde_json::from_str(&tokenizer_content)?;
         let vocab_obj = tokenizer_json["model"]["vocab"]
             .as_object()
@@ -134,12 +147,12 @@ impl KokoroTTS {
             vocab.insert(token.clone(), id.as_i64().unwrap_or(0));
         }
 
-        let tokenizer = EspeakIpaTokenizer::new(vocab)?;
+        let tokenizer = EspeakIpaTokenizer::new(vocab)?.with_model_max_length(max_length);
 
         Ok(KokoroTTS {
             session,
             tokenizer,
-            config,
+            sample_rate,
         })
     }
 
@@ -192,11 +205,11 @@ impl KokoroTTS {
         if let Ok(output) = outputs[0].try_extract::<f32>() {
             let view = output.view();
             let samples = view.as_slice().unwrap().to_vec();
-            let duration_seconds = samples.len() as f32 / self.config.sample_rate as f32;
+            let duration_seconds = samples.len() as f32 / self.sample_rate as f32;
 
             let audio = GeneratedAudio {
                 samples,
-                sample_rate: self.config.sample_rate,
+                sample_rate: self.sample_rate,
                 duration_seconds,
             };
 

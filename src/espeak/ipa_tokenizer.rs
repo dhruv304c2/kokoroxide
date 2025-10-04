@@ -30,6 +30,11 @@ impl EspeakIpaTokenizer {
         })
     }
 
+    pub fn with_model_max_length(mut self, max_length: usize) -> Self {
+        self.model_max_length = max_length;
+        self
+    }
+
     /// Convert espeak IPA to Misaki phonemes to match kokoro Python output
     fn espeak_ipa_to_misaki(&self, ipa: &str) -> String {
         // First, replace the Unicode tie bar (U+0361) with caret (^) to match Python
